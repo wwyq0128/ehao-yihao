@@ -113,6 +113,28 @@
   <div id="title">饿饿一号</div>
   <div id="subtitle">你的小岛</div>
   <div id="new-letter-badge">✦ 有新的信</div>
+
+  <!-- Mood Selector -->
+  <div id="mood-selector">
+    <button class="mood-btn active" data-mood="dusk" title="黄昏">🌅</button>
+    <button class="mood-btn" data-mood="night" title="星夜">🌙</button>
+    <button class="mood-btn" data-mood="dawn" title="晨曦">🌄</button>
+    <button class="mood-btn" data-mood="clear" title="晴空">☀️</button>
+  </div>
+
+  <!-- Journal Notebook Icon -->
+  <div id="journal-icon" title="随笔本">
+    <svg viewBox="0 0 40 40" width="40" height="40">
+      <rect x="8" y="4" width="24" height="32" rx="2" fill="#F0E6D3" stroke="#C4A882" stroke-width="1"/>
+      <rect x="8" y="4" width="5" height="32" rx="1" fill="#E85D75"/>
+      <line x1="16" y1="12" x2="28" y2="12" stroke="#B8956A" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="16" y1="18" x2="28" y2="18" stroke="#B8956A" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="16" y1="24" x2="24" y2="24" stroke="#B8956A" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <span id="journal-label">随笔</span>
+  </div>
+
+
 </div>
 <div id="letters-overlay" class="hidden">
   <div id="letters-panel">
@@ -129,6 +151,20 @@
     <div id="letter-content"></div>
   </div>
 </div>
+
+<div id="journal-overlay" class="hidden">
+  <div id="journal-panel">
+    <button id="close-journal">✕</button>
+    <h2>📖 随笔本</h2>
+    <div id="journal-editor">
+      <textarea id="journal-text" placeholder="写点什么吧……"></textarea>
+      <button id="save-journal" class="journal-btn">保存</button>
+      <span id="journal-status"></span>
+    </div>
+    <div id="journal-entries"></div>
+  </div>
+</div>
+
 <div id="warm-word-popup" class="hidden">
   <div id="warm-word-text"></div>
 </div>
@@ -136,5 +172,6 @@
 <script src="js/scene.js"></script>
 <script src="js/warm-words.js"></script>
 <script src="js/letters.js"></script>
+<script src="js/journal.js"></script>
 </body>
 </html>

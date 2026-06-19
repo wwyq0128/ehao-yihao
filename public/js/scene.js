@@ -21,6 +21,234 @@
   defs.appendChild(grad);
 })();
 
+
+
+// --- Mood System ---
+const MOOD_THEMES = {
+  dusk: {
+    sky: ['#FF7B54', '#E55D87', '#7B4B8C', '#FFAE7A'],
+    bg: '#FF7B54',
+    ocean: ['#2C6E8F', '#1A4A6B', '#0E2D44'],
+    sun: { visible: true, color: '#FFD700', glow: '#FF9F1C', cx: '800', cy: '580', reflection: true },
+    waveColors: ['#2C6E8F', '#4A9BB5', '#1A4A6B', '#0E2D44'],
+    titleColor: '#FFF0D0',
+    subtitleColor: '#FFD4B8',
+    label: '黄昏'
+  },
+  night: {
+    sky: ['#0B0D2E', '#1A1B4B', '#2D2B5E', '#1A1B4B'],
+    bg: '#0B0D2E',
+    ocean: ['#0A1628', '#06101E', '#030B14'],
+    sun: { visible: false, color: '', glow: '', cx: '800', cy: '200', reflection: false },
+    moon: { visible: true, color: '#E8E0FF', glow: '#C8B8FF', cx: '800', cy: '200' },
+    waveColors: ['#0A1628', '#1A2A4A', '#06101E', '#030B14'],
+    titleColor: '#E8E0FF',
+    subtitleColor: '#A090C8',
+    label: '星夜'
+  },
+  dawn: {
+    sky: ['#FF9E7A', '#FFB8A0', '#C8A0C8', '#8BA0C8'],
+    bg: '#FF9E7A',
+    ocean: ['#4A7B8F', '#3A6A7F', '#2A5A6F'],
+    sun: { visible: true, color: '#FFD4A0', glow: '#FFB080', cx: '800', cy: '620', reflection: true },
+    waveColors: ['#4A7B8F', '#6A9BB5', '#3A6A7F', '#2A5A6F'],
+    titleColor: '#FFF0E0',
+    subtitleColor: '#FFD4B8',
+    label: '晨曦'
+  },
+  clear: {
+    sky: ['#4A90D9', '#6AA8E8', '#8AB8E8', '#B0D0F0'],
+    bg: '#4A90D9',
+    ocean: ['#1A6A8F', '#2A7A9F', '#1A5A7F', '#0A4A6F'],
+    sun: { visible: true, color: '#FFE88A', glow: '#FFD060', cx: '800', cy: '200', reflection: true },
+    waveColors: ['#1A6A8F', '#4A9BB5', '#1A5A7F', '#0A4A6F'],
+    titleColor: '#FFFFFF',
+    subtitleColor: '#E0E8F0',
+    label: '晴空'
+  }
+};
+
+let currentMood = 'dusk';
+
+function applyMood(mood) {
+  const theme = MOOD_THEMES[mood];
+  if (!theme) return;
+  currentMood = mood;
+  
+  // Update sky gradient
+  const svg = document.getElementById('scene-svg');
+  const defs = svg.querySelector('defs');
+  const oldGrad = document.getElementById('sky-grad');
+  if (oldGrad) oldGrad.remove();
+  
+  const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+  grad.id = 'sky-grad';
+  grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0');
+  grad.setAttribute('x2', '0'); grad.setAttribute('y2', '1');
+  theme.sky.forEach(c => {
+    const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop.setAttribute('offset', theme.sky.indexOf(c) * 33 + '%');
+    stop.setAttribute('stop-color', c);
+    grad.appendChild(stop);
+  });
+  defs.appendChild(grad);
+  document.getElementById('sky').setAttribute('fill', 'url(#sky-grad)');
+  
+  // Update background
+  document.body.style.background = theme.bg;
+  
+  // Update sun
+  const sun = document.getElementById('sun');
+  const sunGlow = document.querySelector('#scene-svg circle[cx="800"][cy="560"]');
+  const sunReflection = document.getElementById('sun-reflection');
+  
+  if (theme.sun.visible) {
+    sun.style.display = '';
+    if (sunGlow) sunGlow.style.display = '';
+    if (sunReflection) sunReflection.style.display = '';
+    sun.setAttribute('cx', theme.sun.cx);
+    sun.setAttribute('cy', theme.sun.cy);
+    sun.setAttribute('fill', theme.sun.color);
+    if (sunGlow) {
+      sunGlow.setAttribute('cx', theme.sun.cx);
+      sunGlow.setAttribute('cy', parseFloat(theme.sun.cy) - 20 + '');
+    }
+  } else {
+    sun.style.display = 'none';
+    if (sunGlow) sunGlow.style.display = 'none';
+    if (sunReflection) sunReflection.style.display = 'none';
+  }
+  
+  // Handle moon for night mode
+  let moonGroup = document.getElementById('moon-group');
+  if (theme.moon && theme.moon.visible) {
+    if (!moonGroup) {
+      moonGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      moonGroup.id = 'moon-group';
+      const moonGlow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      moonGlow.id = 'moon-glow';
+      moonGlow.setAttribute('r', '60');
+      moonGlow.setAttribute('fill', 'url(#moon-glow-grad)');
+      moonGroup.appendChild(moonGlow);
+      const moon = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      moon.id = 'moon';
+      moon.setAttribute('r', '30');
+      moon.setAttribute('fill', theme.moon.color);
+      moon.setAttribute('filter', 'url(#soft-glow)');
+      moonGroup.appendChild(moon);
+      svg.querySelector('g.clouds').before(moonGroup);
+      
+      // Moon glow gradient
+      const moonGrad = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient');
+      moonGrad.id = 'moon-glow-grad';
+      moonGrad.setAttribute('cx', '50%'); moonGrad.setAttribute('cy', '50%'); moonGrad.setAttribute('r', '50%');
+      const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+      stop1.setAttribute('offset', '0%'); stop1.setAttribute('stop-color', theme.moon.glow); stop1.setAttribute('stop-opacity', '0.3');
+      const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+      stop2.setAttribute('offset', '100%'); stop2.setAttribute('stop-color', theme.moon.glow); stop2.setAttribute('stop-opacity', '0');
+      moonGrad.appendChild(stop1); moonGrad.appendChild(stop2);
+      defs.appendChild(moonGrad);
+    }
+    moonGroup.style.display = '';
+    moonGroup.setAttribute('transform', 'translate(800, 200)');
+    document.getElementById('moon').setAttribute('fill', theme.moon.color);
+  } else if (moonGroup) {
+    moonGroup.style.display = 'none';
+  }
+  
+  // Add/remove stars for night mode
+  let starsGroup = document.getElementById('stars-group');
+  if (mood === 'night') {
+    if (!starsGroup) {
+      starsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      starsGroup.id = 'stars-group';
+      for (let i = 0; i < 60; i++) {
+        const star = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        star.setAttribute('class', 'star');
+        star.setAttribute('cx', Math.random() * 1600 + '');
+        star.setAttribute('cy', Math.random() * 400 + '');
+        star.setAttribute('r', (Math.random() * 1.5 + 0.5) + '');
+        star.setAttribute('fill', '#FFF');
+        star.setAttribute('opacity', (Math.random() * 0.5 + 0.2) + '');
+        star.style.animationDelay = (Math.random() * 3) + 's';
+        star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        starsGroup.appendChild(star);
+      }
+      svg.querySelector('g.clouds').before(starsGroup);
+    }
+    starsGroup.style.display = '';
+  } else if (starsGroup) {
+    starsGroup.style.display = 'none';
+  }
+  
+  // Update waves
+  const waveEls = document.querySelectorAll('.wave');
+  if (waveEls.length >= 4) {
+    waveEls[0].style.background = 'linear-gradient(180deg, transparent 40%, ' + theme.waveColors[0] + ' 41%, ' + theme.waveColors[3] + ' 100%)';
+    waveEls[2].style.background = 'radial-gradient(ellipse at 50% 0%, transparent 50%, ' + theme.waveColors[1] + ' 51%, transparent 52%)';
+    waveEls[3].style.background = 'linear-gradient(180deg, transparent 50%, ' + theme.waveColors[3] + ' 51%, ' + theme.waveColors[3] + ' 100%)';
+  }
+  
+  // Update title colors
+  document.getElementById('title').style.color = theme.titleColor;
+  document.getElementById('subtitle').style.color = theme.subtitleColor;
+  
+  // Update mood buttons
+  document.querySelectorAll('.mood-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mood === mood);
+  });
+  
+  // Save preference
+  localStorage.setItem('ehao_mood', mood);
+}
+
+// --- Ocean Sparkles (on canvas) ---
+let oceanSparkles = [];
+function createOceanSparkles() {
+  oceanSparkles = [];
+  const count = 30;
+  for (let i = 0; i < count; i++) {
+    oceanSparkles.push({
+      x: Math.random() * canvasW,
+      y: canvasH * (0.62 + Math.random() * 0.35),
+      size: Math.random() * 2 + 1,
+      phase: Math.random() * Math.PI * 2,
+      speed: Math.random() * 0.02 + 0.01,
+      opacity: 0
+    });
+  }
+}
+
+// --- Seabirds (SVG) ---
+let seabirds = [];
+function createSeabirds() {
+  const svg = document.getElementById('scene-svg');
+  const existing = document.getElementById('seabirds-group');
+  if (existing) existing.remove();
+  
+  const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  group.id = 'seabirds-group';
+  
+  for (let i = 0; i < 3; i++) {
+    const bird = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    bird.setAttribute('class', 'ocean-birds');
+    bird.style.animationDelay = (i * 3) + 's';
+    bird.style.animationDuration = (12 + i * 3) + 's';
+    const x = 200 + i * 400;
+    const y = 380 + i * 30;
+    bird.setAttribute('d', 'M' + x + ',' + y + ' Q' + (x+8) + ',' + (y-8) + ' ' + (x+16) + ',' + y + ' Q' + (x+24) + ',' + (y-6) + ' ' + (x+32) + ',' + y);
+    bird.setAttribute('fill', 'none');
+    bird.setAttribute('stroke', 'rgba(255,200,180,0.25)');
+    bird.setAttribute('stroke-width', '1.5');
+    bird.setAttribute('stroke-linecap', 'round');
+    group.appendChild(bird);
+  }
+  svg.querySelector('g.clouds').before(group);
+}
+
+// Modified drawFireflies to also draw ocean sparkles
+const originalDrawFireflies = drawFireflies;
+// We'll replace the draw function
 // --- Fireflies Canvas ---
 const canvas = document.getElementById('fireflies-canvas');
 const ctx = canvas.getContext('2d');
@@ -135,9 +363,21 @@ canvas.addEventListener('mouseleave', function() {
   mouseX = -1000; mouseY = -1000;
 });
 
-// Draw fireflies
+// Draw fireflies + ocean sparkles
 function drawFireflies(time) {
   ctx.clearRect(0, 0, canvasW, canvasH);
+
+  // Draw ocean sparkles
+  for (const s of oceanSparkles) {
+    s.opacity = 0.15 + 0.25 * (0.5 + 0.5 * Math.sin(time * s.speed * 1.5 + s.phase));
+    const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 4);
+    grad.addColorStop(0, `rgba(255,255,255,${s.opacity * 0.5})`);
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size * 4, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
 
   for (const f of fireflies) {
     // Gentle drift
@@ -197,7 +437,76 @@ function animate(time) {
 loadWarmWords().then(() => {
   const count = window.innerWidth > 1200 ? 40 : window.innerWidth > 768 ? 30 : 20;
   createFireflies(count);
+  createOceanSparkles();
+  createSeabirds();
   animate(0);
+});
+
+// Mood selector events
+document.querySelectorAll('.mood-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyMood(btn.dataset.mood));
+});
+
+// Restore saved mood
+const savedMood = localStorage.getItem('ehao_mood');
+if (savedMood && MOOD_THEMES[savedMood]) {
+  setTimeout(() => applyMood(savedMood), 100);
+}
+
+// Editable subtitle
+const subtitle = document.getElementById('subtitle');
+const storedSlogan = localStorage.getItem('ehao_slogan');
+if (storedSlogan) subtitle.textContent = storedSlogan;
+
+subtitle.addEventListener('dblclick', function() {
+  const input = document.getElementById('subtitle-input');
+  if (!input) {
+    const inp = document.createElement('input');
+    inp.id = 'subtitle-input';
+    inp.type = 'text';
+    inp.value = subtitle.textContent;
+    subtitle.parentNode.insertBefore(inp, subtitle.nextSibling);
+    inp.style.display = 'block';
+    subtitle.style.opacity = '0';
+    inp.focus();
+    inp.select();
+    
+    function saveSlogan() {
+      const val = inp.value.trim() || '你的小岛';
+      subtitle.textContent = val;
+      subtitle.style.opacity = '';
+      inp.style.display = 'none';
+      localStorage.setItem('ehao_slogan', val);
+    }
+    inp.addEventListener('blur', saveSlogan);
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { inp.blur(); }
+      if (e.key === 'Escape') { inp.value = subtitle.textContent; inp.blur(); }
+    });
+  }
+});
+
+// Journal icon
+document.getElementById('journal-icon').addEventListener('click', () => {
+  const overlay = document.getElementById('journal-overlay');
+  overlay.classList.remove('hidden');
+  setTimeout(() => overlay.classList.add('show'), 10);
+  if (typeof loadJournalEntries === 'function') loadJournalEntries();
+});
+
+document.getElementById('close-journal').addEventListener('click', () => {
+  const overlay = document.getElementById('journal-overlay');
+  overlay.classList.remove('show');
+  setTimeout(() => overlay.classList.add('hidden'), 400);
+});
+
+document.getElementById('journal-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('close-journal').click();
+});
+
+// Save journal entry
+document.getElementById('save-journal').addEventListener('click', () => {
+  if (typeof saveJournalEntry === 'function') saveJournalEntry();
 });
 
 // Recreate on resize
@@ -207,4 +516,5 @@ window.addEventListener('resize', () => {
     const count = window.innerWidth > 1200 ? 40 : window.innerWidth > 768 ? 30 : 20;
     createFireflies(count);
   }
+  createOceanSparkles();
 });
