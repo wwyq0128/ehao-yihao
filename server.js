@@ -6,7 +6,7 @@ const os = require('os');
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ehao123';
-const SITE_PASSWORD = process.env.SITE_PASSWORD || 'sbmyx';
+const SITE_PASSWORD = process.env.SITE_PASSWORD || 'wyqdsg';
 
 const DATA_DIR = path.join(__dirname, 'data');
 const PUBLIC_DIR = path.join(__dirname, 'public');
