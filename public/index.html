@@ -134,6 +134,17 @@
     <span id="journal-label">随笔</span>
   </div>
 
+  <div id="room-icon" title="小房间">
+    <svg viewBox="0 0 40 40" width="40" height="40">
+      <path d="M6 18L20 8L34 18V33H6Z" fill="#F6E7D0" stroke="#C89F75" stroke-width="1.2"/>
+      <path d="M12 16L20 10L28 16" fill="none" stroke="#E07A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="16" y="22" width="8" height="11" rx="2" fill="#D98C6B"/>
+      <rect x="11" y="22" width="3" height="3" rx="1" fill="#FFE7A6"/>
+      <rect x="26" y="22" width="3" height="3" rx="1" fill="#FFE7A6"/>
+    </svg>
+    <span id="room-label">房间</span>
+  </div>
+
 
 </div>
 <div id="letters-overlay" class="hidden">
@@ -165,6 +176,82 @@
   </div>
 </div>
 
+<div id="room-overlay" class="hidden">
+  <div id="room-panel">
+    <button id="close-room">✕</button>
+    <div id="room-header">
+      <div>
+        <div class="room-eyebrow">宠物房间</div>
+        <h2>今天想陪谁一起待着？</h2>
+      </div>
+      <button id="pet-switch-btn" class="room-ghost-btn">重新选择</button>
+    </div>
+
+    <div id="pet-selection">
+      <button class="pet-choice" data-pet="dog">
+        <span class="pet-choice-emoji">🐶</span>
+        <span class="pet-choice-name">小狗</span>
+        <span class="pet-choice-desc">黏人、活泼、会等你回家</span>
+      </button>
+      <button class="pet-choice" data-pet="cat">
+        <span class="pet-choice-emoji">🐱</span>
+        <span class="pet-choice-name">小猫</span>
+        <span class="pet-choice-desc">软软的，安静时也会陪着你</span>
+      </button>
+      <button class="pet-choice" data-pet="bird">
+        <span class="pet-choice-emoji">🐦</span>
+        <span class="pet-choice-name">小鸟</span>
+        <span class="pet-choice-desc">轻快、机灵，心情会跟着亮一点</span>
+      </button>
+    </div>
+
+    <div id="pet-room" class="hidden">
+      <div id="pet-stage">
+        <div id="pet-backdrop">
+          <div class="room-lamp"></div>
+          <div class="room-window">
+            <div class="window-sky"></div>
+            <div class="window-sea"></div>
+          </div>
+          <div class="room-rug"></div>
+          <div id="pet-avatar-wrap">
+            <div id="pet-avatar"></div>
+            <div id="pet-bubble"></div>
+          </div>
+        </div>
+        <div id="pet-meta">
+          <div id="pet-title-row">
+            <div>
+              <div id="pet-name-line">
+                <span id="pet-kind-name"></span>
+                <span id="pet-level-badge"></span>
+              </div>
+              <div id="pet-mood-line"></div>
+            </div>
+          </div>
+          <label id="pet-name-editor">
+            <span>昵称</span>
+            <input id="pet-name-input" type="text" maxlength="12" placeholder="给它起个名字">
+          </label>
+        </div>
+      </div>
+
+      <div id="pet-stats"></div>
+
+      <div id="pet-actions">
+        <button class="pet-action-btn" data-action="feed">喂食</button>
+        <button class="pet-action-btn" data-action="play">陪玩</button>
+        <button class="pet-action-btn" data-action="rest">休息</button>
+      </div>
+
+      <div id="pet-log-card">
+        <div class="room-section-title">今日碎碎念</div>
+        <div id="pet-log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="warm-word-popup" class="hidden">
   <div id="warm-word-text"></div>
 </div>
@@ -172,6 +259,7 @@
 <script src="js/scene.js"></script>
 <script src="js/warm-words.js"></script>
 <script src="js/letters.js"></script>
+<script src="js/pets.js"></script>
 <script src="js/journal.js"></script>
 </body>
 </html>

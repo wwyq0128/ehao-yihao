@@ -494,14 +494,31 @@ document.getElementById('journal-icon').addEventListener('click', () => {
   if (typeof loadJournalEntries === 'function') loadJournalEntries();
 });
 
+document.getElementById('room-icon').addEventListener('click', () => {
+  const overlay = document.getElementById('room-overlay');
+  overlay.classList.remove('hidden');
+  setTimeout(() => overlay.classList.add('show'), 10);
+  if (typeof renderPetRoom === 'function') renderPetRoom();
+});
+
 document.getElementById('close-journal').addEventListener('click', () => {
   const overlay = document.getElementById('journal-overlay');
   overlay.classList.remove('show');
   setTimeout(() => overlay.classList.add('hidden'), 400);
 });
 
+document.getElementById('close-room').addEventListener('click', () => {
+  const overlay = document.getElementById('room-overlay');
+  overlay.classList.remove('show');
+  setTimeout(() => overlay.classList.add('hidden'), 400);
+});
+
 document.getElementById('journal-overlay').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) document.getElementById('close-journal').click();
+});
+
+document.getElementById('room-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('close-room').click();
 });
 
 // Save journal entry
