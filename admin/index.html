@@ -160,6 +160,31 @@ textarea {
   font-size: 14px;
 }
 
+.journal-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,224,102,0.08);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+}
+.journal-card .date {
+  font-size: 12px;
+  color: #8B75A0;
+  margin-bottom: 8px;
+}
+.journal-card .text {
+  font-size: 15px;
+  color: #E8D0F0;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.journal-card .actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
 /* --- Login --- */
 #login-screen {
   display: flex;
@@ -242,11 +267,18 @@ textarea {
       <span class="subtitle" id="letter-count" style="margin:0;font-size:12px;"></span>
     </div>
     <div id="letter-list"></div>
+
+    <div class="section-title" style="margin-top:28px;">
+      <span>她写的随笔</span>
+      <span class="subtitle" id="journal-count" style="margin:0;font-size:12px;"></span>
+    </div>
+    <div id="journal-list"></div>
   </div>
 </div>
 
 <script>
 let token = null;
+const LETTER_ARCHIVE_KEY = 'ehao_letter_archive';
 
 // --- DOM refs ---
 const loginScreen = document.getElementById('login-screen');
@@ -262,6 +294,34 @@ const sendSuccess = document.getElementById('send-success');
 const sendError = document.getElementById('send-error');
 const letterListEl = document.getElementById('letter-list');
 const letterCount = document.getElementById('letter-count');
+const journalListEl = document.getElementById('journal-list');
+const journalCount = document.getElementById('journal-count');
+
+function getArchivedLetters() {
+  try {
+    return JSON.parse(localStorage.getItem(LETTER_ARCHIVE_KEY)) || [];
+  } catch { return []; }
+}
+
+function saveArchivedLetters(letters) {
+  localStorage.setItem(LETTER_ARCHIVE_KEY, JSON.stringify(letters));
+}
+
+function upsertArchivedLetter(letter) {
+  const letters = getArchivedLetters();
+  const index = letters.findIndex(item => item.id === letter.id);
+  if (index >= 0) {
+    letters[index] = { ...letters[index], ...letter };
+  } else {
+    letters.push(letter);
+  }
+  saveArchivedLetters(letters);
+}
+
+function removeArchivedLetter(id) {
+  const letters = getArchivedLetters().filter(item => item.id !== id);
+  saveArchivedLetters(letters);
+}
 
 // --- Auth ---
 async function login() {
@@ -301,6 +361,7 @@ function showMain() {
   mainScreen.classList.remove('hidden');
   logoutBtn.style.display = 'block';
   loadLetters();
+  loadJournal();
 }
 
 // --- Check stored token ---
@@ -315,8 +376,74 @@ async function loadLetters() {
     const res = await fetch('/api/letters');
     const data = await res.json();
     const letters = data.letters || [];
+    if (letters.length === 0) {
+      await restoreArchivedLetters();
+      const archive = getArchivedLetters();
+      renderLetters(archive);
+      return;
+    }
+    saveArchivedLetters(letters);
     renderLetters(letters);
-  } catch {}
+  } catch {
+    renderLetters(getArchivedLetters());
+  }
+}
+
+async function restoreArchivedLetters() {
+  const archivedLetters = getArchivedLetters().sort((a, b) => a.id - b.id);
+  if (archivedLetters.length === 0 || !token) return;
+  for (const letter of archivedLetters) {
+    try {
+      await fetch('/api/letters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(letter)
+      });
+    } catch {}
+  }
+}
+
+async function loadJournal() {
+  try {
+    const res = await fetch('/api/journal', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) {
+      journalCount.textContent = '';
+      journalListEl.innerHTML = '<div class="empty-msg">需要先登录后才能查看 ✦</div>';
+      return;
+    }
+    const data = await res.json();
+    renderJournal(data.entries || []);
+  } catch {
+    journalCount.textContent = '';
+    journalListEl.innerHTML = '<div class="empty-msg">加载失败 ✦</div>';
+  }
+}
+
+function renderJournal(entries) {
+  journalListEl.innerHTML = '';
+  journalCount.textContent = '共 ' + entries.length + ' 篇';
+  if (entries.length === 0) {
+    journalListEl.innerHTML = '<div class="empty-msg">还没有写过随笔 ✦</div>';
+    return;
+  }
+  entries.sort((a, b) => b.id - a.id).forEach(e => {
+    const card = document.createElement('div');
+    card.className = 'journal-card';
+    card.innerHTML = `
+      <div class="date">${e.date}</div>
+      <div class="text">${escapeHtml(e.text)}</div>
+      <div class="actions">
+        <button class="delete-btn" data-id="${e.id}">✕</button>
+      </div>
+    `;
+    card.querySelector('.delete-btn').addEventListener('click', () => deleteJournal(e.id));
+    journalListEl.appendChild(card);
+  });
 }
 
 function renderLetters(letters) {
@@ -355,6 +482,13 @@ async function sendLetter() {
   sendError.textContent = '';
   sendSuccess.textContent = '';
   sendBtn.disabled = true;
+  const draftLetter = {
+    id: Date.now(),
+    title,
+    content,
+    date: new Date().toISOString().slice(0, 10),
+    read: false
+  };
   try {
     const res = await fetch('/api/letters', {
       method: 'POST',
@@ -362,14 +496,25 @@ async function sendLetter() {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token
       },
-      body: JSON.stringify({ title, content })
+      body: JSON.stringify(draftLetter)
     });
-    if (!res.ok) { sendError.textContent = '发送失败'; return; }
+    if (!res.ok) {
+      upsertArchivedLetter(draftLetter);
+      renderLetters(getArchivedLetters());
+      sendError.textContent = '服务器没存住，但这封信已经替你留档了';
+      return;
+    }
+    const data = await res.json();
+    upsertArchivedLetter(data.letter || draftLetter);
     sendSuccess.textContent = '信已送达 ✦';
     titleInput.value = '';
     contentInput.value = '';
     loadLetters();
-  } catch { sendError.textContent = '连接失败'; }
+  } catch {
+    upsertArchivedLetter(draftLetter);
+    renderLetters(getArchivedLetters());
+    sendError.textContent = '连接失败，但这封信已经替你留档了';
+  }
   sendBtn.disabled = false;
 }
 
@@ -378,6 +523,8 @@ sendBtn.addEventListener('click', sendLetter);
 // --- Delete letter ---
 async function deleteLetter(id) {
   if (!confirm('确定删除这封信吗？')) return;
+  removeArchivedLetter(id);
+  renderLetters(getArchivedLetters());
   try {
     await fetch('/api/letters/' + id, {
       method: 'DELETE',
@@ -385,6 +532,23 @@ async function deleteLetter(id) {
     });
     loadLetters();
   } catch {}
+}
+
+async function deleteJournal(id) {
+  if (!confirm('确定删除这篇随笔吗？')) return;
+  try {
+    await fetch('/api/journal/' + id, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    loadJournal();
+  } catch {}
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 </script>
 </body>

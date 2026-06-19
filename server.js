@@ -12,9 +12,12 @@ const DATA_DIR = path.join(__dirname, 'data');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const ADMIN_HTML = path.join(__dirname, 'admin', 'index.html');
 const LETTERS_FILE = path.join(DATA_DIR, 'letters.json');
+const JOURNAL_FILE = path.join(DATA_DIR, 'journal.json');
 const WORDS_FILE = path.join(DATA_DIR, 'warm-words.json');
 
 let adminTokens = [];
+
+fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -48,6 +51,16 @@ function checkAuth(req) {
   const a = req.headers['authorization'] || '';
   if (!a.startsWith('Bearer ')) return false;
   return adminTokens.includes(a.slice(7));
+}
+
+function upsertById(items, item) {
+  const index = items.findIndex(entry => entry.id === item.id);
+  if (index >= 0) {
+    items[index] = { ...items[index], ...item };
+  } else {
+    items.push(item);
+  }
+  return items;
 }
 
 function serveStatic(res, filePath) {
@@ -93,6 +106,43 @@ async function handle(req, res) {
     return;
   }
 
+  if (p === '/api/journal' && method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ entries: readJSON(JOURNAL_FILE) }));
+    return;
+  }
+
+  if (p === '/api/journal' && method === 'POST') {
+    const body = await parseBody(req);
+    if (!body.text) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'empty fields' }));
+      return;
+    }
+    const entry = {
+      id: body.id || Date.now(),
+      text: body.text,
+      date: body.date || new Date().toISOString().slice(0, 16).replace('T', ' ')
+    };
+    const entries = readJSON(JOURNAL_FILE);
+    upsertById(entries, entry);
+    entries.sort((a, b) => b.id - a.id);
+    writeJSON(JOURNAL_FILE, entries);
+    res.writeHead(201, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ entry }));
+    return;
+  }
+
+  const journalDeleteMatch = p.match(/^\/api\/journal\/(\d+)$/);
+  if (journalDeleteMatch && method === 'DELETE') {
+    let entries = readJSON(JOURNAL_FILE);
+    entries = entries.filter(e => e.id !== parseInt(journalDeleteMatch[1]));
+    writeJSON(JOURNAL_FILE, entries);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true }));
+    return;
+  }
+
   if (p === '/api/letters' && method === 'POST') {
     if (!checkAuth(req)) {
       res.writeHead(401, { 'Content-Type': 'application/json' });
@@ -106,8 +156,14 @@ async function handle(req, res) {
       return;
     }
     const letters = readJSON(LETTERS_FILE);
-    const letter = { id: Date.now(), title: body.title, content: body.content, date: new Date().toISOString().slice(0, 10), read: false };
-    letters.push(letter);
+    const letter = {
+      id: body.id || Date.now(),
+      title: body.title,
+      content: body.content,
+      date: body.date || new Date().toISOString().slice(0, 10),
+      read: body.read === true
+    };
+    upsertById(letters, letter);
     writeJSON(LETTERS_FILE, letters);
     res.writeHead(201, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ letter }));
