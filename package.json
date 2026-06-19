@@ -1,0 +1,9 @@
+{
+  "name": "ehao-yihao",
+  "version": "1.0.0",
+  "description": "饿饿一号 — 属于她的小岛",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

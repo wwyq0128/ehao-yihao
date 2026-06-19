@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>饿饿一号</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- Site Gate -->
+<div id="site-gate">
+  <div class="gate-title">饿饿一号</div>
+  <div class="gate-subtitle">你的小岛</div>
+  <div class="gate-input-group">
+    <input type="password" id="gate-password" placeholder="输入暗号" autocomplete="off">
+    <button id="gate-btn">进入</button>
+    <div class="gate-error" id="gate-error">暗号不对，再试试</div>
+  </div>
+  <div class="gate-hint">✦</div>
+</div>
+
+<div id="scene">
+  <svg id="scene-svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="sun-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FFE066" stop-opacity="0.8"/>
+        <stop offset="40%" stop-color="#FF9F1C" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="#FF9F1C" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="lighthouse-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FFE066" stop-opacity="0.6"/>
+        <stop offset="100%" stop-color="#FFE066" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="soft-glow">
+        <feGaussianBlur stdDeviation="4" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect id="sky" x="0" y="0" width="1600" height="620"/>
+    <g class="clouds">
+      <path class="cloud c1" d="M200,180 Q230,150 270,170 Q300,150 330,170 Q360,160 380,180 Q400,200 370,210 L210,210 Q180,200 200,180Z" fill="#FFD4B8" opacity="0.5"/>
+      <path class="cloud c2" d="M1000,120 Q1030,90 1070,110 Q1100,90 1130,110 Q1160,100 1180,120 Q1200,140 1170,150 L1010,150 Q980,140 1000,120Z" fill="#FFD4B8" opacity="0.4"/>
+      <path class="cloud c3" d="M600,250 Q620,230 650,240 Q670,225 700,240 Q720,235 735,250 Q750,265 730,270 L610,270 Q585,260 600,250Z" fill="#E8B8D0" opacity="0.3"/>
+    </g>
+    <circle cx="800" cy="560" r="180" fill="url(#sun-glow)"/>
+    <circle id="sun" cx="800" cy="580" r="70" fill="#FFD700" filter="url(#soft-glow)"/>
+    <g id="sun-reflection">
+      <rect x="750" y="610" width="100" height="3" rx="1.5" fill="#FFE066" opacity="0.6"/>
+      <rect x="760" y="620" width="80" height="2" rx="1" fill="#FFE066" opacity="0.4"/>
+      <rect x="770" y="630" width="60" height="2" rx="1" fill="#FFE066" opacity="0.3"/>
+      <rect x="780" y="640" width="40" height="2" rx="1" fill="#FFE066" opacity="0.2"/>
+    </g>
+  </svg>
+  <div id="ocean-waves">
+    <div class="wave w1"></div>
+    <div class="wave w2"></div>
+    <div class="wave w3"></div>
+    <div class="wave w4"></div>
+  </div>
+  <canvas id="fireflies-canvas"></canvas>
+  <div id="island-container">
+    <svg id="island-svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
+      <path id="island-shape" d="M80,260 Q70,220 100,190 Q130,160 160,155 Q190,150 220,155 Q260,160 290,185 Q320,210 330,260Z" fill="#5D8A3C"/>
+      <path id="island-highlight" d="M100,200 Q130,170 160,162 Q190,157 220,162 Q250,168 270,185 Q250,190 220,185 Q190,182 160,188 Q130,195 110,205Z" fill="#7EAB5E" opacity="0.5"/>
+      <path id="beach" d="M80,260 Q60,250 70,240 Q100,220 130,230 Q120,250 100,260Z" fill="#D4A76A"/>
+      <path id="path" d="M170,280 Q175,260 180,240 Q185,220 195,200 L185,200 Q175,220 170,240 Q165,260 160,280Z" fill="#B8956A" opacity="0.6"/>
+      <g id="grass-tufts">
+        <path d="M120,230 Q118,220 122,218 Q124,225 126,230Z" fill="#4A7C2F"/>
+        <path d="M240,220 Q238,210 242,208 Q244,215 246,220Z" fill="#4A7C2F"/>
+        <path d="M200,170 Q198,162 202,160 Q204,166 206,170Z" fill="#4A7C2F"/>
+      </g>
+      <g id="lighthouse-group" cursor="pointer">
+        <rect x="168" y="105" width="36" height="65" rx="2" fill="#F0E6D3"/>
+        <rect x="172" y="108" width="28" height="10" rx="1" fill="#E85D75"/>
+        <rect x="172" y="125" width="28" height="10" rx="1" fill="#E85D75"/>
+        <rect x="172" y="142" width="28" height="10" rx="1" fill="#E85D75"/>
+        <rect x="164" y="88" width="44" height="20" rx="3" fill="#3D2B3D"/>
+        <rect x="168" y="170" width="36" height="8" rx="2" fill="#D4C5A9"/>
+        <rect x="165" y="88" width="42" height="4" rx="2" fill="#2A1B2A"/>
+        <rect id="lighthouse-window" x="180" y="92" width="12" height="14" rx="1" fill="#FFE066"/>
+        <circle id="lighthouse-glow-circle" cx="186" cy="99" r="30" fill="url(#lighthouse-glow)" opacity="0.6"/>
+        <rect id="light-beam-left" x="130" y="106" width="38" height="4" rx="2" fill="#FFE066" opacity="0.15"/>
+        <rect id="light-beam-right" x="204" y="106" width="38" height="4" rx="2" fill="#FFE066" opacity="0.15"/>
+        <circle cx="186" cy="99" r="8" fill="#FFE066" opacity="0.4">
+          <animate attributeName="opacity" values="0.4;0.7;0.4" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="186" cy="99" r="14" fill="#FFE066" opacity="0.2">
+          <animate attributeName="opacity" values="0.2;0.5;0.2" dur="3s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+      <g id="tree-group">
+        <path d="M258,195 Q260,175 255,160 Q252,150 258,142" stroke="#6B4226" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M258,142 Q248,138 235,148 Q228,155 230,165 Q228,172 235,178 Q240,182 250,180 Q255,175 258,170" fill="#4A7C2F"/>
+        <path d="M258,142 Q268,136 278,145 Q285,152 283,162 Q285,170 278,175 Q272,180 265,178 Q260,173 258,168" fill="#5D8A3C"/>
+        <path d="M258,145 Q266,140 273,148 Q270,142 258,145Z" fill="#6BA84E" opacity="0.5"/>
+        <circle cx="235" cy="155" r="3" fill="#6BA84E" opacity="0.6"/>
+        <circle cx="278" cy="160" r="2.5" fill="#6BA84E" opacity="0.5"/>
+      </g>
+      <g id="sparkles">
+        <circle cx="140" cy="190" r="1.5" fill="#FFE066" opacity="0.6">
+          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="250" cy="195" r="1" fill="#FFE066" opacity="0.5">
+          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="180" cy="185" r="1.2" fill="#FFE066" opacity="0.4">
+          <animate attributeName="opacity" values="0.2;0.6;0.2" dur="2s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+    </svg>
+    <div id="lighthouse-label">灯塔来信</div>
+  </div>
+  <div id="title">饿饿一号</div>
+  <div id="subtitle">你的小岛</div>
+  <div id="new-letter-badge">✦ 有新的信</div>
+</div>
+<div id="letters-overlay" class="hidden">
+  <div id="letters-panel">
+    <button id="close-letters">✕</button>
+    <h2>灯塔来信</h2>
+    <div id="letters-list"></div>
+  </div>
+</div>
+<div id="letter-detail-overlay" class="hidden">
+  <div id="letter-detail">
+    <button id="close-detail">✕</button>
+    <div id="letter-date"></div>
+    <h2 id="letter-title"></h2>
+    <div id="letter-content"></div>
+  </div>
+</div>
+<div id="warm-word-popup" class="hidden">
+  <div id="warm-word-text"></div>
+</div>
+<script src="js/gate.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/warm-words.js"></script>
+<script src="js/letters.js"></script>
+</body>
+</html>
