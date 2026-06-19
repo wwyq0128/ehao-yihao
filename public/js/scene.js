@@ -195,12 +195,16 @@ function animate(time) {
 
 // Init
 loadWarmWords().then(() => {
-  createFireflies(20);
+  const count = window.innerWidth > 1200 ? 40 : window.innerWidth > 768 ? 30 : 20;
+  createFireflies(count);
   animate(0);
 });
 
 // Recreate on resize
 window.addEventListener('resize', () => {
   resizeCanvas();
-  if (fireflies.length > 0) createFireflies(20);
+  if (fireflies.length > 0) {
+    const count = window.innerWidth > 1200 ? 40 : window.innerWidth > 768 ? 30 : 20;
+    createFireflies(count);
+  }
 });

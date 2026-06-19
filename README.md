@@ -27,34 +27,101 @@ node server.js
 
 ## ☁️ 部署指南
 
-### 方式一：Railway（推荐，最方便）
+> 选一个方式就好，推荐 Railway。
 
-1. 注册 [Railway](https://railway.app/)（免费套餐有 500 小时/月）
-2. 把 `饿饿一号` 文件夹推送到 GitHub
-3. 在 Railway 点 "New Project" → "Deploy from GitHub Repo"
-4. 选择你的仓库
-5. 在 Railway 的 "Variables" 里添加：
-   - `ADMIN_PASSWORD` = 你自己设的密码
-   - `PORT` = 3000
-6. 部署完成！得到一个 `*.railway.app` 的网址
-7. 把网址发给她
+### 方式一：Railway（推荐）
+
+适合：想让网站一直在线、不操心维护的人。  
+免费套餐每月 500 小时 ≈ 每天 16 小时在线，超出后付费起步 $5/月（无限在线）。
+
+**步骤：**
+
+1. 注册 [Railway](https://railway.app/)（GitHub 登录即可）
+2. 点击右上角 **"New Project"**
+3. 选择 **"Deploy from GitHub Repo"**
+4. 授权 Railway 访问 GitHub，选择 `wwyq0128/ehao-yihao`
+5. 项目创建后，点顶栏 **"Variables"**
+6. 添加以下环境变量：
+   - `ADMIN_PASSWORD` = 你设置的后台密码（比如 `ehao123`）
+   - `SITE_PASSWORD` = 网站进入密码（可选，默认 `sbmyx`）
+   - `PORT` = `3000`
+7. Railway 会自动检测到 `package.json`，自动运行 `npm start`
+8. 等一两分钟部署完成，点 **"Settings" → "Domains"** 生成域名
+9. 拿到 `你的项目名.railway.app` 的网址，发给她就行
+
+> 💡 以后每次往 GitHub 推送代码，Railway 会自动重新部署。
+
+---
 
 ### 方式二：Render
 
-1. 注册 [Render](https://render.com/)（免费套餐）
-2. 新建 "Web Service"，连接 GitHub 仓库
-3. Start Command 填：`node server.js`
-4. 添加环境变量 `ADMIN_PASSWORD`
-5. 部署完拿到网址
+适合：零预算、不介意偶尔有冷启动延迟（免费实例闲置 15 分钟会休眠）。  
 
-### 方式三：你自己的服务器
+**步骤：**
+
+1. 注册 [Render](https://render.com/)（GitHub 登录）
+2. 点 **"New +" → "Web Service"**
+3. 连接 GitHub，选择 `wwyq0128/ehao-yihao`
+4. 填以下信息：
+   - **Name**: `ehao-yihao`
+   - **Region**: 选离你最近的
+   - **Branch**: `main`
+   - **Runtime**: `Node`
+   - **Build Command**: 留空
+   - **Start Command**: `node server.js`
+   - **Plan**: `Free`
+5. 点 **"Advanced"**，添加环境变量：
+   - `ADMIN_PASSWORD` = 你设置的后台密码
+   - `SITE_PASSWORD` = 网站进入密码（可选）
+6. 点 **"Create Web Service"**
+7. 等几分钟部署完，拿到 `ehao-yihao.onrender.com` 的网址
+
+> ⚠️ Render 免费实例在 15 分钟无访问后会休眠，下次打开需要等 5-10 秒冷启动。
+
+---
+
+### 方式三：自己的服务器 + Cloudflare Tunnel（最稳定）
+
+适合：手头有一台 VPS 或家里的 NAS/旧电脑长期开机。  
+这种方式最可控，且不需要暴露端口、不需要操心 SSL。
+
+**前提：** 服务器上装了 Node.js。
+
+**步骤：**
 
 ```bash
-# 有 Node.js 就行
-git clone <你的仓库>
-cd 饿饿一号
-ADMIN_PASSWORD=你的密码 node server.js
+# 1. SSH 到你的服务器，拉取代码
+git clone https://github.com/wwyq0128/ehao-yihao.git
+cd ehao-yihao
+
+# 2. 启动（建议用 pm2 保持后台运行）
+npm install pm2 -g
+ADMIN_PASSWORD=你的密码 SITE_PASSWORD=暗号 pm2 start server.js --name ehao-yihao
+
+# 3. 配置 Cloudflare Tunnel（项目里已自带 cloudflared）
+#    在 Cloudflare Zero Trust 面板创建一个 Tunnel，
+#    拿到 Tunnel Token 后运行：
+cloudflared tunnel run --token 你的token
+
+# 4. 在 Cloudflare DNS 里将域名指向 Tunnel，自动 HTTPS
 ```
+
+> 没有域名的话，也可以用 `cloudflared` 的 `--url` 模式生成一个临时网址：
+> ```bash
+> ./cloudflared-binary tunnel --url http://localhost:3000
+> ```
+
+---
+
+### 部署后检查清单
+
+无论用哪种方式，部署完后确认这几项：
+
+- [ ] 打开网址，能看到"暗号"输入页（网站密码）
+- [ ] 输入暗号 `sbmyx`（或你自己改的），能进入小岛
+- [ ] 打开 `你的网址/admin`，能用后台密码登录
+- [ ] 写一封测试信，回到小岛点灯塔能看到它
+- [ ] 手机打开网址，布局正常
 
 ## 📝 管理后台
 

@@ -6,6 +6,7 @@ const os = require('os');
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ehao123';
+const SITE_PASSWORD = process.env.SITE_PASSWORD || 'sbmyx';
 
 const DATA_DIR = path.join(__dirname, 'data');
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -176,12 +177,3 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('   🔐 管理后台: http://localhost:' + PORT + '/admin');
   console.log('   📝 后台密码: ' + ADMIN_PASSWORD);
 });
-
-// --- Site password gate ---
-const SITE_PASSWORD = process.env.SITE_PASSWORD || "sbmyx";
-
-// In the handle function, add before the static file handling:
-/* 在 handle 函数中，在 const MIME 之前添加 */
-/* SITE_PASSWORD is already declared above */
-
-/* 在文件末尾的 server.listen 前面加这个 */
