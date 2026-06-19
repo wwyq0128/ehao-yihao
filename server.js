@@ -13,6 +13,7 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const ADMIN_HTML = path.join(__dirname, 'admin', 'index.html');
 const LETTERS_FILE = path.join(DATA_DIR, 'letters.json');
 const JOURNAL_FILE = path.join(DATA_DIR, 'journal.json');
+const PET_STATE_FILE = path.join(DATA_DIR, 'pet-state.json');
 const WORDS_FILE = path.join(DATA_DIR, 'warm-words.json');
 
 let adminTokens = [];
@@ -112,6 +113,12 @@ async function handle(req, res) {
     return;
   }
 
+  if (p === '/api/pet-state' && method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ state: readJSON(PET_STATE_FILE) || {} }));
+    return;
+  }
+
   if (p === '/api/journal' && method === 'POST') {
     const body = await parseBody(req);
     if (!body.text) {
@@ -130,6 +137,19 @@ async function handle(req, res) {
     writeJSON(JOURNAL_FILE, entries);
     res.writeHead(201, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ entry }));
+    return;
+  }
+
+  if (p === '/api/pet-state' && method === 'POST') {
+    const body = await parseBody(req);
+    if (!body || typeof body !== 'object') {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'invalid pet state' }));
+      return;
+    }
+    writeJSON(PET_STATE_FILE, body);
+    res.writeHead(201, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ state: body }));
     return;
   }
 

@@ -68,6 +68,28 @@ function savePetState(state) {
   localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(state));
 }
 
+async function syncPetStateToServer(state) {
+  try {
+    await fetch('/api/pet-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+  } catch {}
+}
+
+async function loadPetStateFromServer() {
+  try {
+    const res = await fetch('/api/pet-state');
+    const data = await res.json();
+    if (data.state && data.state.selectedPet) {
+      savePetState(data.state);
+      return data.state;
+    }
+  } catch {}
+  return getPetState();
+}
+
 function clampStat(value) {
   return Math.max(0, Math.min(100, value));
 }
@@ -146,6 +168,7 @@ function renderPetRoom() {
 function choosePet(type) {
   const state = getDefaultPetState(type);
   savePetState(state);
+  syncPetStateToServer(state);
   renderPetRoom();
 }
 
@@ -154,6 +177,7 @@ function updatePetName(name) {
   if (!state.selectedPet) return;
   state.name = name.trim() || PETS[state.selectedPet].defaultName;
   savePetState(state);
+  syncPetStateToServer(state);
   renderPetRoom();
 }
 
@@ -186,12 +210,14 @@ function doPetAction(action) {
 
   addPetLog(state, (state.name || pet.defaultName) + '：' + state.moodText);
   savePetState(state);
+  syncPetStateToServer(state);
   renderPetRoom();
 }
 
 function resetPetChoice() {
   const state = { selectedPet: null };
   savePetState(state);
+  syncPetStateToServer(state);
   renderPetRoom();
 }
 
@@ -215,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     switchBtn.addEventListener('click', resetPetChoice);
   }
 
-  renderPetRoom();
+  loadPetStateFromServer().then(() => renderPetRoom());
 });
 
 window.renderPetRoom = renderPetRoom;
